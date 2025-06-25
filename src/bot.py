@@ -111,5 +111,5 @@ if __name__ == "__main__":
     for chat_id, _ in list_all_user_settings():
         schedule_next(chat_id, app.job_queue)
 
-    print(f"python-telegram-bot v{ptb_version} running...")
+    print(f"python-telegram-bot v{ptb_version} is running...")
     app.run_polling()
