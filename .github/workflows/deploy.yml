@@ -1,0 +1,43 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir -r requirements.txt
+
+      - name: Prepare Firebase credentials
+        run: echo "${{ secrets.FIREBASE_CREDENTIALS }}" > serviceAccountKey.json
+        env:
+          FIREBASE_SA_KEY: ${{ secrets.FIREBASE_SA_KEY }}
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.BOT_HOST }}
+          username: ${{ secrets.BOT_SSH_USER }}
+          key: ${{ secrets.BOT_SSH_KEY }}
+          script: |
+            docker build -t giftbot .
+            docker stop giftbot || true
+            docker rm giftbot   || true
+            docker run -d --restart=always \
+              -e DEBUG=False \
+              -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
+              -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+              -e FIREBASE_CREDENTIALS=./serviceAccountKey.json \
+              --name giftbot giftbot
