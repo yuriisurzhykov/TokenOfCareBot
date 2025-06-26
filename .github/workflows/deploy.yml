@@ -12,17 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
       - name: Install dependencies
         run: pip install --no-cache-dir -r requirements.txt
 
       - name: Prepare Firebase credentials
         run: echo "${{ secrets.FIREBASE_CREDENTIALS }}" > serviceAccountKey.json
 
+      # 1) Копируем весь репозиторий на сервер в папку ~/giftbot
+      - name: Copy code to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.BOT_HOST }}
+          username: ${{ secrets.BOT_SSH_USER }}
+          key: ${{ secrets.BOT_SSH_KEY }}
+          port: ${{ secrets.BOT_SSH_PORT || 22 }}
+          source: "."
+          target: "~/giftbot"
+
+      # 2) По SSH переходим в ~/giftbot и собираем/запускаем контейнер
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -30,16 +37,18 @@ jobs:
           username: ${{ secrets.BOT_SSH_USER }}
           key: ${{ secrets.BOT_SSH_KEY }}
           script: |
-            # Build a new docker-image
+            cd ~/giftbot
+
+            # Собираем образ (Dockerfile должен быть здесь)
             docker build -t giftbot .
 
-            # Stop old container
+            # Останавливаем / удаляем старый контейнер, если есть
             docker stop giftbot || true
-            docker rm giftbot   || true
+            docker rm   giftbot || true
 
-            # Launch new image
-            docker run -d --restart=always \
-              -e DEBUG=False \
+            # Запускаем новый контейнер
+            docker run -d \
+              --restart unless-stopped \
               -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
               -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
               -e FIREBASE_CREDENTIALS=/app/serviceAccountKey.json \
