@@ -23,7 +23,7 @@ jobs:
       - name: Prepare Firebase credentials
         run: echo "${{ secrets.FIREBASE_CREDENTIALS }}" > serviceAccountKey.json
         env:
-          FIREBASE_SA_KEY: ${{ secrets.FIREBASE_SA_KEY }}
+          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
 
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1
@@ -40,4 +40,5 @@ jobs:
               -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
               -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
               -e FIREBASE_CREDENTIALS=./serviceAccountKey.json \
+              -e FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
               --name giftbot giftbot
