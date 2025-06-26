@@ -22,8 +22,6 @@ jobs:
 
       - name: Prepare Firebase credentials
         run: echo "${{ secrets.FIREBASE_CREDENTIALS }}" > serviceAccountKey.json
-        env:
-          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
 
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1
@@ -32,13 +30,18 @@ jobs:
           username: ${{ secrets.BOT_SSH_USER }}
           key: ${{ secrets.BOT_SSH_KEY }}
           script: |
+            # Build a new docker-image
             docker build -t giftbot .
+
+            # Stop old container
             docker stop giftbot || true
             docker rm giftbot   || true
+
+            # Launch new image
             docker run -d --restart=always \
               -e DEBUG=False \
               -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
               -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-              -e FIREBASE_CREDENTIALS=./serviceAccountKey.json \
-              -e FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+              -e FIREBASE_CREDENTIALS=/app/serviceAccountKey.json \
+              -e FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
               --name giftbot giftbot
