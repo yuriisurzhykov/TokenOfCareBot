@@ -48,9 +48,10 @@ jobs:
 
             # Запускаем новый контейнер
             docker run -d \
+              --name giftbot \
               --restart unless-stopped \
-              -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
-              -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+              -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
+              -e OPENAI_API_KEY="$OPENAI_API_KEY" \
               -e FIREBASE_CREDENTIALS=/app/serviceAccountKey.json \
-              -e FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
-              --name giftbot giftbot
+              -e FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID" \
+              giftbot:latest
