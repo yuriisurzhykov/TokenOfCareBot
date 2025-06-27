@@ -12,7 +12,10 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Prepare Firebase credentials
-      run: echo "${{ secrets.FIREBASE_CREDENTIALS }}" > serviceAccountKey.json
+      run: |
+        cat << 'EOF' > serviceAccountKey.json
+        ${{ secrets.FIREBASE_CREDENTIALS }}
+        EOF
 
     - name: Copy code to server
       uses: appleboy/scp-action@v0.1.4
