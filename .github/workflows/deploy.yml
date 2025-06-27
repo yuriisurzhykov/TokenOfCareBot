@@ -47,6 +47,7 @@ jobs:
           docker run -d \
             --name giftbot \
             --restart unless-stopped \
+            --network host \
             -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
             -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
             -e FIREBASE_CREDENTIALS=/app/serviceAccountKey.json \
