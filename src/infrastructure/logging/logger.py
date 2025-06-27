@@ -7,58 +7,69 @@ from logging.handlers import RotatingFileHandler, SysLogHandler
 from pythonjsonlogger import jsonlogger
 
 
-def setup_logging():
+def setup_logging() -> logging.Logger:
     """
-    Setting up structured and human-readable logging:
-    - ConsoleHandler (human-readable format) for local development.
-    - JSON StreamHandler for Docker/syslog.
-    - RotatingFileHandler for saving logs to disk.
-    - SysLogHandler (optional) for centralized collection.
+    Configure logging for both local development and production:
+      - DEBUG mode: human-readable console output + local file logs.
+      - Production: structured JSON logs to stdout + rotating file logs.
+      - Optional SysLogHandler (if SYSLOG_HOST is set).
     """
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    debug_mode = os.getenv("DEBUG", "False") == 'True'
+    logger.setLevel(logging.DEBUG if debug_mode else logging.INFO)
 
-    # 1) Readable console log
-    console_formatter = logging.Formatter(
-        fmt="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S%z"
-    )
-    ch = StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
-    ch.setFormatter(console_formatter)
-    logger.addHandler(ch)
+    # 1) Remove any pre-existing handlers
+    for h in list(logger.handlers):
+        logger.removeHandler(h)
 
-    # 2) JSON log for Docker/syslog
-    json_handler = StreamHandler(sys.stdout)
-    json_handler.setLevel(logging.INFO)
-    json_formatter = jsonlogger.JsonFormatter(
-        fmt='%(asctime) %(name) %(levelname) %(message)',
-        timestamp=True
-    )
-    json_handler.setFormatter(json_formatter)
-    logger.addHandler(json_handler)
+    # 2) File handler — path depends on environment
+    #    локально будет ./logs/giftbot.log, в контейнере — /app/logs/giftbot.log
+    default_path = os.getenv("LOG_FILE_PATH")
+    if not default_path:
+        if debug_mode:
+            default_path = os.path.join(os.getcwd(), "logs", "giftbot.log")
+        else:
+            default_path = os.path.join("/app", "logs", "giftbot.log")
+    os.makedirs(os.path.dirname(default_path), exist_ok=True)
 
-    # 3) Log files rotation
-    log_path = os.getenv("LOG_FILE_PATH", "/app/logs/giftbot.log")
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)
     fh = RotatingFileHandler(
-        filename=log_path,
+        filename=default_path,
         maxBytes=5 * 1024 * 1024,
         backupCount=5,
         encoding="utf-8"
     )
     fh.setLevel(logging.INFO)
-    fh.setFormatter(console_formatter)
+    text_fmt = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z"
+    )
+    fh.setFormatter(text_fmt)
     logger.addHandler(fh)
 
-    # 4) Syslog (optional)
+    # 3) Console or JSON to stdout
+    if debug_mode:
+        # human-readable console output
+        ch = StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(text_fmt)
+        logger.addHandler(ch)
+    else:
+        # structured JSON for Docker/syslog
+        jh = StreamHandler(sys.stdout)
+        jh.setLevel(logging.INFO)
+        jf = jsonlogger.JsonFormatter(
+            fmt="%(asctime) %(name) %(levelname) %(message)",
+            timestamp=True
+        )
+        jh.setFormatter(jf)
+        logger.addHandler(jh)
+
+    # 4) Optional SysLogHandler
     syslog_host = os.getenv("SYSLOG_HOST")
     if syslog_host:
-        sys_handler = SysLogHandler(
-            address=(syslog_host, int(os.getenv("SYSLOG_PORT", 514)))
-        )
-        sys_handler.setLevel(logging.INFO)
-        sys_handler.setFormatter(console_formatter)
-        logger.addHandler(sys_handler)
+        sh = SysLogHandler(address=(syslog_host, int(os.getenv("SYSLOG_PORT", 514))))
+        sh.setLevel(logging.INFO)
+        sh.setFormatter(text_fmt)
+        logger.addHandler(sh)
 
     return logger
