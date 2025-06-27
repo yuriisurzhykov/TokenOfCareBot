@@ -2,8 +2,8 @@
 
 [![CI/CD Pipeline](https://github.com/yuriisurzhykov/TokenOfCareBot/actions/workflows/deploy.yml/badge.svg)](https://github.com/yuriisurzhykov/TokenOfCareBot/actions)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)
-![Telegram Bot](https://img.shields.io/badge/Telegram-Bot-2CA5E0?logo=telegram&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI-Powered-4527A0?logo=openai&logoColor=white)
+[![Telegram Bot](https://img.shields.io/badge/Telegram-Bot-2CA5E0?logo=telegram&logoColor=white)](https://t.me/tokenofcarebot)
+[![OpenAI](https://img.shields.io/badge/OpenAI-Powered-4527A0?logo=openai&logoColor=white)](https://openai.com/api/)
 [![GitHub issues](https://img.shields.io/github/issues/yuriisurzhykov/TokenOfCareBot)](https://github.com/yuriisurzhykov/TokenOfCareBot/issues)
 [![License](https://img.shields.io/github/license/yuriisurzhykov/TokenOfCareBot)](https://github.com/yuriisurzhykov/TokenOfCareBot/blob/main/LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/yuriisurzhykov/TokenOfCareBot)](https://github.com/yuriisurzhykov/TokenOfCareBot/commits/main)
@@ -127,4 +127,4 @@ This project is licensed under the MIT License. See the [LICENSE](https://github
 
 ---
 
-© 2024 Yurii Surzhykov — TokenOfCareBot
+© 2025 Yurii Surzhykov — TokenOfCareBot
