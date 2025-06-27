@@ -65,8 +65,8 @@ def setup_logging() -> logging.Logger:
     syslog_host = os.getenv("SYSLOG_HOST")
     if syslog_host:
         try:
-            sh = SysLogHandler(address=(syslog_host, int(os.getenv("SYSLOG_PORT", 514))))
-            sh.ident = "giftbot: "
+            sh = SysLogHandler(address=(syslog_host, os.getenv("SYSLOG_PORT", 514)))
+            sh.ident = "giftbot"
             sh.setLevel(logging.INFO)
             sh.setFormatter(text_fmt)
             logger.addHandler(sh)
