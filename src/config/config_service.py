@@ -37,3 +37,15 @@ class ConfigService:
     @property
     def firebase_project_id(self) -> str:
         return os.getenv("FIREBASE_PROJECT_ID", "")
+
+    @property
+    def logging_file_path(self) -> str:
+        debug_mode = os.getenv("DEBUG") == 'True'
+        default_path = os.getenv("LOG_FILE_PATH")
+        if not default_path:
+            if debug_mode:
+                default_path = os.path.join(os.getcwd(), "logs", "giftbot.log")
+            else:
+                default_path = os.path.join("/app", "logs", "giftbot.log")
+        os.makedirs(os.path.dirname(default_path), exist_ok=True)
+        return default_path

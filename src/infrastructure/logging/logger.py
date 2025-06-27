@@ -6,6 +6,8 @@ from logging.handlers import RotatingFileHandler, SysLogHandler
 
 from pythonjsonlogger import jsonlogger
 
+from src.config.config_service import ConfigService
+
 
 def setup_logging() -> logging.Logger:
     """
@@ -24,13 +26,8 @@ def setup_logging() -> logging.Logger:
 
     # 2) File handler — path depends on environment
     #    локально будет ./logs/giftbot.log, в контейнере — /app/logs/giftbot.log
-    default_path = os.getenv("LOG_FILE_PATH")
-    if not default_path:
-        if debug_mode:
-            default_path = os.path.join(os.getcwd(), "logs", "giftbot.log")
-        else:
-            default_path = os.path.join("/app", "logs", "giftbot.log")
-    os.makedirs(os.path.dirname(default_path), exist_ok=True)
+    config = ConfigService()
+    default_path = config.logging_file_path
 
     fh = RotatingFileHandler(
         filename=default_path,
