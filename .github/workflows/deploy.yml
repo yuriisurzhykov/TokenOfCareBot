@@ -51,4 +51,6 @@ jobs:
             -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
             -e FIREBASE_CREDENTIALS=/app/serviceAccountKey.json \
             -e FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
+            -e SYSLOG_HOST=host.docker.internal \
+            -e SYSLOG_PORT=514
             giftbot:latest
