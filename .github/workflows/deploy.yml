@@ -2,55 +2,50 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches: [ master ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: pip install --no-cache-dir -r requirements.txt
+    - name: Prepare Firebase credentials
+      run: echo "${{ secrets.FIREBASE_CREDENTIALS }}" > serviceAccountKey.json
 
-      - name: Prepare Firebase credentials
-        run: echo "${{ secrets.FIREBASE_CREDENTIALS }}" > serviceAccountKey.json
+    - name: Copy code to server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.BOT_HOST }}
+        username: ${{ secrets.BOT_SSH_USER }}
+        key: ${{ secrets.BOT_SSH_KEY }}
+        port: ${{ secrets.BOT_SSH_PORT || 22 }}
+        source: "."
+        target: "~/giftbot"
 
-      # 1) Копируем весь репозиторий на сервер в папку ~/giftbot
-      - name: Copy code to server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.BOT_HOST }}
-          username: ${{ secrets.BOT_SSH_USER }}
-          key: ${{ secrets.BOT_SSH_KEY }}
-          port: ${{ secrets.BOT_SSH_PORT || 22 }}
-          source: "."
-          target: "~/giftbot"
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.BOT_HOST }}
+        username: ${{ secrets.BOT_SSH_USER }}
+        key: ${{ secrets.BOT_SSH_KEY }}
+        port: ${{ secrets.BOT_SSH_PORT || 22 }}
+        script: |
+          cd ~/giftbot
 
-      # 2) По SSH переходим в ~/giftbot и собираем/запускаем контейнер
-      - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.BOT_HOST }}
-          username: ${{ secrets.BOT_SSH_USER }}
-          key: ${{ secrets.BOT_SSH_KEY }}
-          script: |
-            cd ~/giftbot
+          # Build an image
+          docker build -t giftbot:latest .
 
-            # Собираем образ (Dockerfile должен быть здесь)
-            docker build -t giftbot .
+          # Remove previous container if any
+          docker rm -f giftbot || true
 
-            # Останавливаем / удаляем старый контейнер, если есть
-            docker stop giftbot || true
-            docker rm -f giftbot || true
-
-            # Запускаем новый контейнер
-            docker run -d --name giftbot \
-               --restart unless-stopped \
-               -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
-               -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-               -e FIREBASE_CREDENTIALS=/serviceAccountKey.json \
-               -e FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
-               giftbot:latest
+          # Start a new with auto restart
+          docker run -d \
+            --name giftbot \
+            --restart unless-stopped \
+            -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
+            -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            -e FIREBASE_CREDENTIALS=/app/serviceAccountKey.json \
+            -e FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
+            giftbot:latest
