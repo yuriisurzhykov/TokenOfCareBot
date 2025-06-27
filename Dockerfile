@@ -24,5 +24,9 @@ USER app
 # Export PYTHONPATH so that 'import src...' can work
 ENV PYTHONPATH=/app
 
-# Entrypoint
+# Verify that the bot is running and Pythong process is active
+HEALTHCHECK --interval=1m --timeout=60s --start-period=30s \
+  CMD pgrep -f "src/app.py" || exit 1
+
+# App Entrypoint
 CMD ["python", "-u", "src/app.py"]
