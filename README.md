@@ -123,7 +123,9 @@ Contributions, bug reports, and feature requests are welcome! Please open issues
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/yuriisurzhykov/TokenOfCareBot/blob/main/LICENSE) file for details.
+This project is licensed under a custom non-commercial license.  
+You may not use or redistribute the code without explicit permission.  
+See the full [LICENSE](./LICENSE.md) for details.
 
 ---
 
