@@ -63,15 +63,15 @@ def setup_logging() -> logging.Logger:
 
     # 4) Optional SysLogHandler
     syslog_host = os.getenv("SYSLOG_HOST")
-    syslog_port = int(os.getenv("SYSLOG_PORT", 514))
-    try:
-        sh = SysLogHandler(address=(syslog_host, syslog_port))
-        sh.ident = "giftbot"
-        sh.setLevel(logging.INFO)
-        sh.setFormatter(text_fmt)
-        logger.addHandler(sh)
-    except Exception as e:
-        logger.warning("Could not set up SysLogHandler (%s:%s): %s",
-                       syslog_host, os.getenv("SYSLOG_PORT", 514), e)
+    if syslog_host:
+        try:
+            sh = SysLogHandler(address=(syslog_host, int(os.getenv("SYSLOG_PORT", 514))))
+            sh.ident = "giftbot"
+            sh.setLevel(logging.INFO)
+            sh.setFormatter(text_fmt)
+            logger.addHandler(sh)
+        except Exception as e:
+            logger.warning("Could not set up SysLogHandler (%s:%s): %s",
+                           syslog_host, os.getenv("SYSLOG_PORT", 514), e)
 
     return logger
